@@ -1,0 +1,4 @@
+﻿  main.cpp
+c:\git\simulators\simulator\main.cpp(294): warning C4101: 'input': unreferenced local variable
+c:\git\simulators\simulator\main.cpp(379): warning C4101: 'input': unreferenced local variable
+  Simulator.vcxproj -> C:\git\Simulators\Simulator\Debug\Simulator.exe
