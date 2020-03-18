@@ -1,2 +1,2 @@
-# Simulators
-Code based on Prof. Vybihal's 2020 Undergrad seminar
+# Simulator
+Code for Prof. Vybihal's 2020 Undergrad introductory seminar on simulation (in progress)
