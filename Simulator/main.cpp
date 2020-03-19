@@ -45,7 +45,7 @@ public:
 	int spot;
 	player p1;
 
-	SDL_Color palette[21] = { {25, 25, 112, 0}, {0, 0, 128, 0}, {0, 0, 205, 0}, {0, 0, 205, 0}, {0, 0, 0, 255}, {45, 100, 245, 0},
+	SDL_Color palette[21] = { {25, 25, 112, 0}, {0, 0, 128, 0}, {0, 0, 205, 0}, {0, 0, 225, 0}, {0, 0, 255, 0}, {45, 100, 245, 0},
 								{51, 171, 240, 0}, {82, 219, 255, 0}, {110, 255, 255, 0}, {168, 255, 255}, {227, 220, 192, 0},
 								{219, 173, 114, 0}, {202, 143, 66, 0}, {124, 252, 0, 0}, {34, 139, 34, 0}, {0, 100, 0, 0},
 								{193, 210, 214, 0}, {174, 187, 199, 0}, {106, 125, 142, 0}, {105, 105, 105, 0}, {240, 240, 240, 0} };
@@ -71,19 +71,22 @@ public:
 		//fill 2d array
 		int chunks[10][10];
 		int coord[100][2], count = 0;
+		int waterCoord[100][2], waterCount = 0;
 		random_device rd;           //Will be used to obtain a seed for the random number engine
 		mt19937 gen(rd());          //Standard mersenne_twister_engine seeded with rd()
 		uniform_real_distribution<> disSeedOnMap(0.2f, 1.0);         //Distribution for seed probability
 		uniform_real_distribution<> disSeedInChunk(0.0, 2.0);        //Distribution for seed within chunk
+		uniform_real_distribution<> disWaterSeed(0.0, 2.0);        //Distribution for water seed
 		double baseCoef = (double)((int)(disSeedOnMap(gen) * 100)) / 100;
+		double waterCoef = (double)((int)(disWaterSeed(gen) * 100)) / 100;
 
 		cout << baseCoef << endl;
 
 		//marks which chunks will hold a seed for the world gen to use later
 		for (int i = 0; i < 10; i++) {
 			for (int j = 0; j < 10; j++) {
-				double seed = (double)((int)(disSeedOnMap(gen) * 100)) / 100;
-				if (seed <= baseCoef) {
+				double seedProb = (double)((int)(disSeedOnMap(gen) * 100)) / 100;
+				if (seedProb <= baseCoef) {
 					chunks[i][j] = 1;
 					m[i * 2 + (int)disSeedInChunk(gen)][j * 2 + (int)disSeedInChunk(gen)] = 1;
 					//save seed coord
@@ -91,13 +94,44 @@ public:
 					coord[count][1] = j * 2 + (int)disSeedInChunk(gen); //x
 					count++;
 				}
-				else chunks[i][j] = 0;
+				else {
+					chunks[i][j] = -1;
+					m[i * 2 + (int)disSeedInChunk(gen)][j * 2 + (int)disSeedInChunk(gen)] = -1;
+					//save seed coord
+					waterCoord[waterCount][0] = i * 2 + (int)disSeedInChunk(gen); //y
+					waterCoord[waterCount][1] = j * 2 + (int)disSeedInChunk(gen); //x
+					waterCount++;
+				}
+				
+				/*else {
+					double waterProb = (double)((int)(disWaterSeed(gen) * 100)) / 100;
+					if (waterProb <= waterCoef) {
+						chunks[i][j] = -1;
+						m[i * 2 + (int)disSeedInChunk(gen)][j * 2 + (int)disSeedInChunk(gen)] = -1;
+						//save seed coord
+						waterCoord[waterCount][0] = i * 2 + (int)disSeedInChunk(gen); //y
+						waterCoord[waterCount][1] = j * 2 + (int)disSeedInChunk(gen); //x
+						waterCount++;
+					}
+					else chunks[i][j] = 0;
+				}*/
 			}
 		}
+		//printing seed map
+		for (int i = 0; i < 20; i++) {
+			for (int j = 0; j < 20; j++) {
+				if (m[i][j] >= 0) {
+					cout << "| " << m[i][j] << '|';
+				}
+				else cout << '|' << m[i][j] << '|';
+			} cout << endl;
+		}
+		cout << "-------------------------------------------" << endl;
+		//
 		//height variation
-		uniform_real_distribution<> disHeight(-1.99, 2.0);
+		uniform_real_distribution<> disHeight(0, 2.0);
 		//time value
-		uniform_real_distribution<> disRange(4.0, 12.0);
+		uniform_real_distribution<> disRange(3.0, 7.0);
 		for (int n = 0; n < count; n++) {
 			int y = coord[n][0], x = coord[n][1];
 			double time = (int)disRange(gen);
@@ -105,15 +139,39 @@ public:
 				for (int y2 = y - t; y2 <= y; y2++) {
 					for (int x2 = x - t; x2 <= x; x2++) {
 						if ((y2 >= 0 && y2 < 20) && (x2 >= 0 && x2 < 20)) {
-							int var = (int)disHeight(gen);
-							m[y2][x2] += var;
+							//int var = (int)disHeight(gen);
+							if (t == time - 1) {
+								int var = (int)disHeight(gen);
+							} else	m[y2][x2] += 1;
 						}
 						//else ignore out of bounds coords
 					}
 				}
 			}
 		}
-
+		//deep variation
+		uniform_real_distribution<> disDeep(-1.99, 0.0);
+		//time2 value
+		uniform_real_distribution<> disRange2(3.0, 7.0);
+		for (int n = 0; n < waterCount; n++) {
+			int y = waterCoord[n][0], x = waterCoord[n][1];
+			double time2 = (int)disRange2(gen);
+			for (int t = 0; t < time2; t++) {
+				for (int y2 = y - t; y2 <= y; y2++) {
+					for (int x2 = x - t; x2 <= x; x2++) {
+						if ((y2 >= 0 && y2 < 20) && (x2 >= 0 && x2 < 20)) {
+							//int var = (int)disDeep(gen);
+							if (t == time2 - 1) {
+								int var = (int)disDeep(gen);
+							}
+							else	m[y2][x2] -= 1;
+						}
+						//else ignore out of bounds coords
+					}
+				}
+			}
+		}
+		
 		//Backup hardcoded fill
 		/* for (int i = 0; i < 100; i++) {
 			for (int j = 0; j < 100; j++) {
@@ -265,7 +323,7 @@ public:
 							SDL_SetRenderDrawColor(renderer, palette[0].r, palette[0].g, palette[0].b, 0);
 							SDL_RenderFillRect(renderer, &tile);
 						} else {
-							SDL_SetRenderDrawColor(renderer, palette[21].r, palette[21].g, palette[21].b, 0);
+							SDL_SetRenderDrawColor(renderer, palette[20].r, palette[20].g, palette[20].b, 0);
 							SDL_RenderFillRect(renderer, &tile);
 						}
 						break;
@@ -285,7 +343,9 @@ public:
 			y += grid_cell_size) {
 			SDL_RenderDrawLine(renderer, 0, y, window_width, y);
 		}
-		SDL_RenderPresent(renderer);
+		SDL_RenderClear; //clear screen
+		SDL_RenderPresent(renderer); //Render backbuffer
+		
 	}
 
 	//Process player input and schedules world updates
@@ -381,7 +441,5 @@ int main() {
 	test.loadWorld();
 	test.displayWorld();
 	test.simLoop();
-
 	return 0;
-
 }
