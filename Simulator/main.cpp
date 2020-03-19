@@ -36,7 +36,6 @@ public:
 				break;
 		}
 	}
-
 };
 
 class world2D {
@@ -118,7 +117,7 @@ public:
 			}
 		}
 		//printing seed map
-		for (int i = 0; i < 20; i++) {
+		/*for (int i = 0; i < 20; i++) {
 			for (int j = 0; j < 20; j++) {
 				if (m[i][j] >= 0) {
 					cout << "| " << m[i][j] << '|';
@@ -127,7 +126,7 @@ public:
 			} cout << endl;
 		}
 		cout << "-------------------------------------------" << endl;
-		//
+		*/
 		//height variation
 		uniform_real_distribution<> disHeight(0, 2.0);
 		//time value
@@ -184,8 +183,8 @@ public:
 
 		//place p1 at the center and save overwritten tile
 		p1.col = 10; p1.row = 10; p1.down;
-		spot = m[p1.row][p1.col];
-		m[p1.row][p1.col] = 99;
+		//spot = m[p1.row][p1.col];
+		//m[p1.row][p1.col] = 99;
 
 		//SDL init checks
 		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -203,6 +202,7 @@ public:
 
 	//Print world to console. For debug purposes.
 	void displayWorld() {
+		//diplay text world to console
 		for (int i = 0; i < 20; i++) {
 			for (int j = 0; j < 20; j++) {
 				if (m[i][j] >= 0) {
@@ -313,11 +313,11 @@ public:
 						SDL_RenderFillRect(renderer, &tile);
 						break;
 					}
-					case 99: {
+					/*case 99: {
 						SDL_SetRenderDrawColor(renderer, 228, 0, 224, 0);
 						SDL_RenderFillRect(renderer, &tile);
 						break;
-					}
+					}*/
 					default: {
 						if (m[i][j]<=-10){
 							SDL_SetRenderDrawColor(renderer, palette[0].r, palette[0].g, palette[0].b, 0);
@@ -329,9 +329,11 @@ public:
 						break;
 					}
 				}
-				
 			}
 		}
+
+		renderPlayer();
+
 		SDL_SetRenderDrawColor(renderer, grid_line_color.r, grid_line_color.g,
 			grid_line_color.b, grid_line_color.a);
 
@@ -348,6 +350,13 @@ public:
 		
 	}
 
+	//Renders player
+	void renderPlayer() {
+		SDL_Rect playerRender = { (this->p1.col*grid_cell_size), (this->p1.row*grid_cell_size), grid_cell_size / 2, grid_cell_size / 2 };
+		SDL_SetRenderDrawColor(renderer, 228, 0, 224, 0);
+		SDL_RenderFillRect(renderer, &playerRender);
+	}
+
 	//Process player input and schedules world updates
 	void simLoop() {
 		int a = 5;
@@ -359,29 +368,29 @@ public:
 					quit = SDL_TRUE;
 				}
 				else if (event.type == SDL_KEYDOWN) {
-					this->updateWorld();
+					//this->updateWorld();
 					switch (event.key.keysym.sym) {
 						case SDLK_UP:
 							this->p1.walk(0);
-							this->placePlayer();
+							this->renderPlayer();
 							this->displayWorld();
 							a--;
 							break;
 						case SDLK_RIGHT:
 							this->p1.walk(1);
-							this->placePlayer();
+							this->renderPlayer();
 							this->displayWorld();
 							a--;
 							break;
 						case SDLK_DOWN:
 							this->p1.walk(2);
-							this->placePlayer();
+							this->renderPlayer();
 							this->displayWorld();
 							a--;
 							break;
 						case SDLK_LEFT:
 							this->p1.walk(3);
-							this->placePlayer();
+							this->renderPlayer();
 							this->displayWorld();
 							a--;
 							break;
@@ -424,14 +433,16 @@ public:
 	}
 
 	//Erases player at position row, col. Restores the location with original tile. Happens when an arrow key has been pressed
+	//deprecated
 	void updateWorld() {
 		this->m[this->p1.row][this->p1.col] = this->spot;
 	}
 
-	//Saves new overwritten tile then writes player onto it.
+	//Saves new overwritten tile then writes player onto it
+	//deprecated
 	void placePlayer() {
-		this->spot = m[this->p1.row][this->p1.col];
-		this->m[this->p1.row][this->p1.col] = 99;
+		//this->spot = m[this->p1.row][this->p1.col];
+		//this->m[this->p1.row][this->p1.col] = 99;
 	}
 };
 
