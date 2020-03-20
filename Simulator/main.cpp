@@ -15,6 +15,8 @@ const int KEY_LEFT = 75;*/
 class player {
 public:
 	int row, col;
+	int curChunk_x, curChunk_y;
+	int camBound_xMin, camBound_xMax, camBound_yMin, camBound_yMax;
 	enum direction { up = 0, right = 1, down = 2, left = 3 };
 
 	player() {}
@@ -35,27 +37,28 @@ public:
 				this->col--;
 				break;
 		}
+		//cout << this->row << endl;
+		//cout << this->col << endl;
 	}
 };
 
 class world2D {
 public:
-	int m[100][100] = { 0 };
-	int mSize = size(m);
-	int chunks[10][10];
-	int chunksSize = size(chunks);
-	int spot;
-	int smallest = 0, biggest = 0;
+	int m[100][100] = { 0 }, mSize = size(m);		//Full map
+	int chunks[10][10], chunksSize = size(chunks);	//Chunks map
+	int camSize = size(chunks)*2;		//Camera view
+	int spot; //deprecated
+	int smallest = 0, biggest = 0;	//debug
 	player p1;
 
 	SDL_Color palette[20] = { {25, 25, 112, 0}, {0, 0, 128, 0}, {0, 0, 205, 0}, {0, 0, 225, 0}, {0, 0, 255, 0}, {45, 100, 245, 0},
 								{51, 171, 240, 0}, {82, 219, 255, 0}, {110, 255, 255, 0}, {168, 255, 255}, {227, 220, 192, 0},
 								{219, 173, 114, 0}, {124, 252, 0, 0}, {34, 139, 34, 0}, {0, 100, 0, 0},
 								{193, 210, 214, 0}, {174, 187, 199, 0}, {106, 125, 142, 0}, {105, 105, 105, 0}, {240, 240, 240, 0} };
-	int grid_cell_size = 5;
+	int grid_cell_size = 20;
 	int grid_width = 100, grid_height = 100;
-	int window_height = (grid_cell_size * grid_height) + 1;
-	int window_width = (grid_cell_size * grid_width) + 1;
+	int window_height = (grid_cell_size * camSize) + 1;
+	int window_width = (grid_cell_size * camSize) + 1;
 	SDL_Color grid_line_color = { 255, 255, 255, 255 }; //White
 	SDL_Window *window;
 	SDL_Renderer *renderer;
@@ -83,7 +86,7 @@ public:
 		double baseCoef = (double)((int)(disSeedOnMap(gen) * 100)) / 100;
 		double waterCoef = (double)((int)(disWaterSeed(gen) * 100)) / 100;
 
-		cout << baseCoef << endl;
+		//cout << baseCoef << endl;
 
 		//marks which chunks will hold a seed for the world gen to use later
 		for (int i = 0; i < chunksSize; i++) {
@@ -188,9 +191,23 @@ public:
 		}*/
 
 		//place p1 at the center and save overwritten tile
-		p1.col = mSize/2; p1.row = mSize/2; p1.down;
+		p1.col = mSize/2-1; p1.row = mSize/2-1; p1.down;
+		p1.curChunk_x = p1.col / 10, p1.curChunk_y = p1.row / 10;
+		p1.camBound_xMin = p1.col - chunksSize;
+		p1.camBound_xMax = p1.col + chunksSize+1;
+		p1.camBound_yMin = p1.row - chunksSize;
+		p1.camBound_yMax = p1.row + chunksSize+1;
+		cout << "---------------------" << endl;
+		cout << p1.camBound_xMin << endl;
+		cout << p1.camBound_xMax << endl;
+		cout << p1.camBound_yMin << endl;
+		cout << p1.camBound_yMax << endl;
+		cout << "---------------------" << endl;
 		//spot = m[p1.row][p1.col];
 		//m[p1.row][p1.col] = 99;
+
+		cout << p1.row << endl;
+		cout << p1.col << endl;
 
 		//SDL init checks
 		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -220,13 +237,14 @@ public:
 				}
 			};
 		}
-		
-		//cout << "-------------------------------------------" << endl;
-		
 		//Rendering individual squares. Color changes based on value.
-		for (int i = 0; i < 100; i++) {
-			for (int j = 0; j < 100; j++) {
-				SDL_Rect tile = { (j * grid_cell_size), (i * grid_cell_size), grid_cell_size, grid_cell_size };
+		//cout << p1.curChunk_y*chunksSize << endl;
+		//cout << p1.curChunk_x*chunksSize << endl;
+		int x = 0, y = 0;
+		for (int i = p1.curChunk_y*chunksSize; i < p1.curChunk_y*chunksSize+camSize; i++) {
+			x = 0;
+			for (int j = p1.curChunk_x*chunksSize; j < p1.curChunk_x*chunksSize+camSize; j++) {
+				SDL_Rect tile = { (x * grid_cell_size), (y * grid_cell_size), grid_cell_size, grid_cell_size };
 				if (m[i][j] <= -41) {
 					SDL_SetRenderDrawColor(renderer, palette[0].r, palette[0].g, palette[0].b, 0);
 					SDL_RenderFillRect(renderer, &tile);
@@ -307,7 +325,9 @@ public:
 					SDL_SetRenderDrawColor(renderer, palette[19].r, palette[19].g, palette[19].b, 0);
 					SDL_RenderFillRect(renderer, &tile);
 				}
+				x++;
 			}
+			y++;
 		}
 
 		renderPlayer();
@@ -323,6 +343,16 @@ public:
 			y += grid_cell_size) {
 			SDL_RenderDrawLine(renderer, 0, y, window_width, y);
 		}*/
+
+		cout << "---------------------" << endl;
+		cout <<"xmin" <<p1.camBound_xMin << endl;
+		cout << "xmax"<<p1.camBound_xMax << endl;
+		cout << "ymin"<<p1.camBound_yMin << endl;
+		cout << "ymax"<<p1.camBound_yMax << endl;
+		cout << "---------------------" << endl;
+		cout << "y"<<p1.row << endl;
+		cout << "x"<<p1.col << endl;
+
 		SDL_RenderClear; //clear screen
 		SDL_RenderPresent(renderer); //Render backbuffer
 		
@@ -330,14 +360,16 @@ public:
 
 	//Renders player
 	void renderPlayer() {
-		SDL_Rect playerRender = { (this->p1.col*grid_cell_size), (this->p1.row*grid_cell_size), grid_cell_size / 2, grid_cell_size / 2 };
+		SDL_Rect playerRender = { ((this->p1.col-this->p1.curChunk_x*chunksSize)*grid_cell_size), ((this->p1.row-this->p1.curChunk_y*chunksSize)*grid_cell_size), grid_cell_size / 2, grid_cell_size / 2 };
+		//cout << (this->p1.col - this->p1.curChunk_x) << endl;
+		//cout << (this->p1.row - this->p1.curChunk_y) << endl;
 		SDL_SetRenderDrawColor(renderer, 228, 0, 224, 0); //purple
 		SDL_RenderFillRect(renderer, &playerRender);
 	}
 
 	//Process player input and schedules world updates
 	void simLoop() {
-		int a = 5;
+		int a = 5000;
 		char input;
 		while (!quit) {
 			SDL_Event event;
@@ -350,25 +382,29 @@ public:
 					switch (event.key.keysym.sym) {
 						case SDLK_UP:
 							this->p1.walk(0);
-							this->renderPlayer();
+							//this->renderPlayer();
+							this->updateCamera();
 							this->displayWorld();
 							a--;
 							break;
 						case SDLK_RIGHT:
 							this->p1.walk(1);
-							this->renderPlayer();
+							//this->renderPlayer();
+							this->updateCamera();
 							this->displayWorld();
 							a--;
 							break;
 						case SDLK_DOWN:
 							this->p1.walk(2);
-							this->renderPlayer();
+							//this->renderPlayer();
+							this->updateCamera();
 							this->displayWorld();
 							a--;
 							break;
 						case SDLK_LEFT:
 							this->p1.walk(3);
-							this->renderPlayer();
+							//this->renderPlayer();
+							this->updateCamera();
 							this->displayWorld();
 							a--;
 							break;
@@ -422,6 +458,31 @@ public:
 		//this->spot = m[this->p1.row][this->p1.col];
 		//this->m[this->p1.row][this->p1.col] = 99;
 	}
+
+	//Recenter camera when needed
+	void updateCamera() {
+		if (p1.col <= p1.camBound_xMin) {
+			p1.camBound_xMin -= 2 * chunksSize;
+			p1.camBound_xMax -= 2 * chunksSize;
+			p1.curChunk_x-=2;
+		} 
+		else if (p1.col >= p1.camBound_xMax) {
+			p1.camBound_xMin += 2 * chunksSize;
+			p1.camBound_xMax += 2 * chunksSize;
+			p1.curChunk_x+=2;
+		}
+		else if (p1.row <= p1.camBound_yMin) {
+			p1.camBound_yMin -= 2 * chunksSize;
+			p1.camBound_yMax -= 2 * chunksSize;
+			p1.curChunk_y-=2;
+		}
+		else if (p1.row >= p1.camBound_yMax) {
+			p1.camBound_yMin += 2 * chunksSize;
+			p1.camBound_yMax += 2 * chunksSize;
+			p1.curChunk_y+=2;
+		}
+	}
+
 };
 
 int main() {
@@ -430,7 +491,5 @@ int main() {
 	test.loadWorld();
 	test.displayWorld();
 	test.simLoop();
-	cout << test.smallest << endl;
-	cout << test.biggest << endl;
 	return 0;
 }
