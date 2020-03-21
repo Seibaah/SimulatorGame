@@ -1,5 +1,5 @@
 ﻿  main.cpp
-c:\git\simulators\simulator\main.cpp(356): warning C4551: function call missing argument list
-c:\git\simulators\simulator\main.cpp(373): warning C4101: 'input': unreferenced local variable
-c:\git\simulators\simulator\main.cpp(489): warning C4101: 'input': unreferenced local variable
+c:\git\simulators\simulator\main.cpp(282): warning C4551: function call missing argument list
+c:\git\simulators\simulator\main.cpp(297): warning C4101: 'input': unreferenced local variable
+c:\git\simulators\simulator\main.cpp(368): warning C4101: 'input': unreferenced local variable
   Simulator.vcxproj -> C:\git\Simulators\Simulator\Debug\Simulator.exe

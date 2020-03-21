@@ -1,23 +1,17 @@
 #include <iostream>
-//#include <conio.h>
 #include <random>
 #include <SDL.h>
 #undef main
 
 
 using namespace std;
-/*const int KEY_ARROW_CHAR1 = 224;
-const int KEY_UP = 72;
-const int KEY_RIGHT = 77;
-const int KEY_DOWN = 80;
-const int KEY_LEFT = 75;*/
 
 class player {
 public:
-	int row, col;
-	int curChunk_x, curChunk_y;
-	int camBound_xMin, camBound_xMax, camBound_yMin, camBound_yMax;
-	enum direction { up = 0, right = 1, down = 2, left = 3 };
+	int row, col;	//player coordinates
+	int curChunk_x, curChunk_y;		//top left camera chunk
+	int camBound_xMin, camBound_xMax, camBound_yMin, camBound_yMax;	//camera bounds
+	enum direction { up = 0, right = 1, down = 2, left = 3 };		//orientation -> not implemented
 
 	player() {}
 	~player() {}
@@ -37,18 +31,14 @@ public:
 				this->col--;
 				break;
 		}
-		//cout << this->row << endl;
-		//cout << this->col << endl;
 	}
 };
 
 class world2D {
 public:
-	int m[100][100] = { 0 }, mSize = size(m);		//Full map
-	int chunks[10][10], chunksSize = size(chunks);	//Chunks map
-	int camSize = size(chunks)*2;		//Camera view
-	int spot; //deprecated
-	int smallest = 0, biggest = 0;	//debug
+	int m[100][100] = { 0 }, mSize = size(m);		//Full map and map side size
+	int chunks[10][10], chunksSize = size(chunks);	//Chunks map and chunks side size
+	int camSize = size(chunks)*2;		//Camera view size
 	player p1;
 
 	SDL_Color palette[20] = { {25, 25, 112, 0}, {0, 0, 128, 0}, {0, 0, 205, 0}, {0, 0, 225, 0}, {0, 0, 255, 0}, {45, 100, 245, 0},
@@ -59,7 +49,6 @@ public:
 	int grid_width = 100, grid_height = 100;
 	int window_height = (grid_cell_size * camSize) + 1;
 	int window_width = (grid_cell_size * camSize) + 1;
-	SDL_Color grid_line_color = { 255, 255, 255, 255 }; //White
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	SDL_bool quit = SDL_FALSE;
@@ -72,93 +61,73 @@ public:
 		SDL_Quit();
 	}
 
-	//Algorithm to generate terrain TODO: Refine
+	void run(int turns) {
+		this->loadWorld();
+		this->displayWorld();
+		this->simLoop(turns);
+	}
+
+	//Algorithm to generate terrain using n_size footprint
 	int loadWorld() {
-		//fill 2d array
-		
-		int coord[100][2], count = 0;
+		int groundCoord[100][2], groundCount = 0;
 		int waterCoord[100][2], waterCount = 0;
 		random_device rd;           //Will be used to obtain a seed for the random number engine
 		mt19937 gen(rd());          //Standard mersenne_twister_engine seeded with rd()
-		uniform_real_distribution<> disSeedOnMap(0.4, 0.66);         //Distribution for seed probability
-		uniform_real_distribution<> disSeedInChunk(0.0, 11.0);        //Distribution for seed within chunk
-		uniform_real_distribution<> disWaterSeed(0.0, 2.0);        //Distribution for water seed
+		uniform_real_distribution<> disSeedOnMap(0.4, 0.66);        //Distribution for seed probability on the map
+		uniform_real_distribution<> disSeedInChunk(0.0, 11.0);		//Distribution for seed within selected chunk
+		uniform_real_distribution<> disWaterSeed(0.0, 2.0);			//Distribution for water seed within the rest of the chunks
 		double baseCoef = (double)((int)(disSeedOnMap(gen) * 100)) / 100;
 		double waterCoef = (double)((int)(disWaterSeed(gen) * 100)) / 100;
-
-		//cout << baseCoef << endl;
 
 		//marks which chunks will hold a seed for the world gen to use later
 		for (int i = 0; i < chunksSize; i++) {
 			for (int j = 0; j < chunksSize; j++) {
 				double seedProb = (double)((int)(disSeedOnMap(gen) * 100)) / 100;
+				//determines if the chunk gets a ground seed
 				if (seedProb <= baseCoef) {
 					chunks[i][j] = 1;
+					//place ground seed inside chunk
 					m[i * chunksSize + (int)disSeedInChunk(gen)][j * chunksSize + (int)disSeedInChunk(gen)] = 1;
 					//save seed coord
-					coord[count][0] = i * chunksSize + (int)disSeedInChunk(gen); //y
-					coord[count][1] = j * chunksSize + (int)disSeedInChunk(gen); //x
-					count++;
+					groundCoord[groundCount][0] = i * chunksSize + (int)disSeedInChunk(gen); //y
+					groundCoord[groundCount][1] = j * chunksSize + (int)disSeedInChunk(gen); //x
+					groundCount++;
 				}
+				//else it gets a water seed
 				else {
 					chunks[i][j] = -1;
+					//place ground seed inside chunk
 					m[i * chunksSize + (int)disSeedInChunk(gen)][j * chunksSize + (int)disSeedInChunk(gen)] = -1;
 					//save seed coord
 					waterCoord[waterCount][0] = i * chunksSize + (int)disSeedInChunk(gen); //y
 					waterCoord[waterCount][1] = j * chunksSize + (int)disSeedInChunk(gen); //x
 					waterCount++;
 				}
-				
-				/*else {
-					double waterProb = (double)((int)(disWaterSeed(gen) * 100)) / 100;
-					if (waterProb <= waterCoef) {
-						chunks[i][j] = -1;
-						m[i * 2 + (int)disSeedInChunk(gen)][j * 2 + (int)disSeedInChunk(gen)] = -1;
-						//save seed coord
-						waterCoord[waterCount][0] = i * 2 + (int)disSeedInChunk(gen); //y
-						waterCoord[waterCount][1] = j * 2 + (int)disSeedInChunk(gen); //x
-						waterCount++;
-					}
-					else chunks[i][j] = 0;
-				}*/
 			}
 		}
-		//printing seed coords
-		/*for (int i = 0; i < 100; i++) {
-			for (int j = 0; j < 100; j++) {
-				if (m[i][j] >= 0) {
-					cout << "| " << m[i][j] << '|';
-				}
-				else cout << '|' << m[i][j] << '|';
-			} cout << endl;
-		}
-		cout << "-------------------------------------------" << endl;
-		*/
-		//height variation
+		
+		//loop through the ground coordinates and elevates terrain around each one
 		uniform_real_distribution<> disHeight(0, 2.0);
-		//time value
 		uniform_real_distribution<> disRange(2.0, 5.0);
-		for (int n = 0; n < count; n++) {
-			int y = coord[n][0], x = coord[n][1];
+		for (int n = 0; n < groundCount; n++) {
+			int y = groundCoord[n][0], x = groundCoord[n][1];
 			double time = (int)disRange(gen);
 			for (int t = 0; t < time; t++) {
 				for (int y2 = y - t; y2 <= 2*y; y2++) {
 					for (int x2 = x - t; x2 <= 2*x; x2++) {
 						if ((y2 >= 0 && y2 < mSize) && (x2 >= 0 && x2 < mSize)) {
-							//int var = (int)disHeight(gen);
 							if (t == time - 1) {
 								int var = (int)disHeight(gen);
 								m[y2][x2] += var;
 							} else	m[y2][x2] += 1;
 						}
-						//else ignore out of bounds coords
 					}
 				}
 			}
 		}
-		//deep variation
+
+		//loop through the water coordinates and decrease terrain around each one
 		uniform_real_distribution<> disDeep(-1.99, 0.0);
-		//time2 value
 		uniform_real_distribution<> disRange2(2.0, 5.0);
 		for (int n = 0; n < waterCount; n++) {
 			int y = waterCoord[n][0], x = waterCoord[n][1];
@@ -167,47 +136,24 @@ public:
 				for (int y2 = y - t; y2 <= 2*y; y2++) {
 					for (int x2 = x - t; x2 <= 2*x; x2++) {
 						if ((y2 >= 0 && y2 < mSize) && (x2 >= 0 && x2 < mSize)) {
-							//int var = (int)disDeep(gen);
 							if (t == time2 - 1) {
 								int var = (int)disDeep(gen);
 								m[y2][x2] -= var;
 							}
 							else	m[y2][x2] -= 1;
 						}
-						//else ignore out of bounds coords
 					}
 				}
 			}
 		}
-		
-		//Backup hardcoded fill
-		/* for (int i = 0; i < 100; i++) {
-			for (int j = 0; j < 100; j++) {
-				if ((i < 1) || (i > 8) || (j < 1) || (j > 8)) {
-					m[i][j] = 1;
-				}
-				else m[i][j] = 0;
-			}
-		}*/
 
-		//place p1 at the center and save overwritten tile
+		//spawn p1 and set camera bounds
 		p1.col = mSize/2-1; p1.row = mSize/2-1; p1.down;
 		p1.curChunk_x = p1.col / 10, p1.curChunk_y = p1.row / 10;
 		p1.camBound_xMin = p1.col - chunksSize;
 		p1.camBound_xMax = p1.col + chunksSize+1;
 		p1.camBound_yMin = p1.row - chunksSize;
 		p1.camBound_yMax = p1.row + chunksSize+1;
-		cout << "---------------------" << endl;
-		cout << p1.camBound_xMin << endl;
-		cout << p1.camBound_xMax << endl;
-		cout << p1.camBound_yMin << endl;
-		cout << p1.camBound_yMax << endl;
-		cout << "---------------------" << endl;
-		//spot = m[p1.row][p1.col];
-		//m[p1.row][p1.col] = 99;
-
-		cout << p1.row << endl;
-		cout << p1.col << endl;
 
 		//SDL init checks
 		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -226,20 +172,7 @@ public:
 	//Print world to console. For debug purposes.
 	void displayWorld() {
 		
-		//tracking max and min height on map
-		for (int i = 0; i < mSize; i++) {
-			for (int j = 0; j < mSize; j++) {
-				if (m[i][j] > biggest) {
-					biggest=m[i][j];
-				}
-				else if (m[i][j] < smallest) {
-					smallest = m[i][j];
-				}
-			};
-		}
 		//Rendering individual squares. Color changes based on value.
-		//cout << p1.curChunk_y*chunksSize << endl;
-		//cout << p1.curChunk_x*chunksSize << endl;
 		int x = 0, y = 0;
 		for (int i = p1.curChunk_y*chunksSize; i < p1.curChunk_y*chunksSize+camSize; i++) {
 			x = 0;
@@ -332,44 +265,35 @@ public:
 
 		renderPlayer();
 
-		/*SDL_SetRenderDrawColor(renderer, grid_line_color.r, grid_line_color.g,
+		//set line color for rendering
+		SDL_Color grid_line_color = { 255, 255, 255, 255 }; //White
+		SDL_SetRenderDrawColor(renderer, grid_line_color.r, grid_line_color.g,
 			grid_line_color.b, grid_line_color.a);
 
-		for (int x = 0; x < 1 + grid_width * grid_cell_size;
-			x += grid_cell_size) {
+		//draw vertical lines in backbuffer
+		for (int x = 0; x < 1 + grid_width * grid_cell_size; x += grid_cell_size) {
 			SDL_RenderDrawLine(renderer, x, 0, x, window_height);
 		}
-		for (int y = 0; y < 1 + grid_height * grid_cell_size;
-			y += grid_cell_size) {
+		//draw horizontal lines in backbuffer
+		for (int y = 0; y < 1 + grid_height * grid_cell_size; y += grid_cell_size) {
 			SDL_RenderDrawLine(renderer, 0, y, window_width, y);
-		}*/
-
-		cout << "---------------------" << endl;
-		cout <<"xmin" <<p1.camBound_xMin << endl;
-		cout << "xmax"<<p1.camBound_xMax << endl;
-		cout << "ymin"<<p1.camBound_yMin << endl;
-		cout << "ymax"<<p1.camBound_yMax << endl;
-		cout << "---------------------" << endl;
-		cout << "y"<<p1.row << endl;
-		cout << "x"<<p1.col << endl;
+		}
 
 		SDL_RenderClear; //clear screen
 		SDL_RenderPresent(renderer); //Render backbuffer
-		
 	}
 
 	//Renders player
 	void renderPlayer() {
-		SDL_Rect playerRender = { ((this->p1.col-this->p1.curChunk_x*chunksSize)*grid_cell_size), ((this->p1.row-this->p1.curChunk_y*chunksSize)*grid_cell_size), grid_cell_size / 2, grid_cell_size / 2 };
-		//cout << (this->p1.col - this->p1.curChunk_x) << endl;
-		//cout << (this->p1.row - this->p1.curChunk_y) << endl;
-		SDL_SetRenderDrawColor(renderer, 228, 0, 224, 0); //purple
+		SDL_Rect playerRender = { ((this->p1.col-this->p1.curChunk_x*chunksSize)*grid_cell_size), 
+			((this->p1.row-this->p1.curChunk_y*chunksSize)*grid_cell_size), 
+			grid_cell_size / 2, grid_cell_size / 2 };
+		SDL_SetRenderDrawColor(renderer, 228, 0, 224, 0);
 		SDL_RenderFillRect(renderer, &playerRender);
 	}
 
 	//Process player input and schedules world updates
-	void simLoop() {
-		int a = 5000;
+	void simLoop(int a) {
 		char input;
 		while (!quit) {
 			SDL_Event event;
@@ -378,38 +302,32 @@ public:
 					quit = SDL_TRUE;
 				}
 				else if (event.type == SDL_KEYDOWN) {
-					//this->updateWorld();
 					switch (event.key.keysym.sym) {
 						case SDLK_UP:
 							this->p1.walk(0);
-							//this->renderPlayer();
 							this->updateCamera();
 							this->displayWorld();
 							a--;
 							break;
 						case SDLK_RIGHT:
 							this->p1.walk(1);
-							//this->renderPlayer();
 							this->updateCamera();
 							this->displayWorld();
 							a--;
 							break;
 						case SDLK_DOWN:
 							this->p1.walk(2);
-							//this->renderPlayer();
 							this->updateCamera();
 							this->displayWorld();
 							a--;
 							break;
 						case SDLK_LEFT:
 							this->p1.walk(3);
-							//this->renderPlayer();
 							this->updateCamera();
 							this->displayWorld();
 							a--;
 							break;
 						}
-
 				}
 				else continue;
 			}
@@ -417,46 +335,7 @@ public:
 				break;
 			}		
 		}
-			
 		quit = SDL_TRUE;
-			
-		//deprecated implementation
-		/*do {
-			unsigned char ch1 = _getch();
-			if (ch1 == KEY_ARROW_CHAR1) {
-				this->updateWorld();
-				switch (input = _getch()) {
-				case KEY_UP:
-					this->p1.walk(0);
-					break;
-				case KEY_RIGHT:
-					this->p1.walk(1);
-					break;
-				case KEY_DOWN:
-					this->p1.walk(2);
-					break;
-				case KEY_LEFT:
-					this->p1.walk(3);
-					break;
-				}
-				this->placePlayer();
-			}
-			this->displayWorld();
-			a--;
-		} while (a > 0);*/
-	}
-
-	//Erases player at position row, col. Restores the location with original tile. Happens when an arrow key has been pressed
-	//deprecated
-	void updateWorld() {
-		this->m[this->p1.row][this->p1.col] = this->spot;
-	}
-
-	//Saves new overwritten tile then writes player onto it
-	//deprecated
-	void placePlayer() {
-		//this->spot = m[this->p1.row][this->p1.col];
-		//this->m[this->p1.row][this->p1.col] = 99;
 	}
 
 	//Recenter camera when needed
@@ -482,14 +361,12 @@ public:
 			p1.curChunk_y+=2;
 		}
 	}
-
 };
 
 int main() {
+	int n = 5000;
 	char input;
 	world2D test;
-	test.loadWorld();
-	test.displayWorld();
-	test.simLoop();
+	test.run(n);
 	return 0;
 }
