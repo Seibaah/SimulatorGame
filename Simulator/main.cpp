@@ -60,10 +60,10 @@ public:
 		SDL_DestroyWindow(window);
 		SDL_Quit();
 	}
-
+	 
 	void run(int turns) {
 		this->loadWorld();
-		this->displayWorld();
+		this->renderCameraPerspective();
 		this->simLoop(turns);
 	}
 
@@ -170,7 +170,7 @@ public:
 	}
 
 	//Print world to console. For debug purposes.
-	void displayWorld() {
+	void renderCameraPerspective() {
 		
 		//Rendering individual squares. Color changes based on value.
 		int x = 0, y = 0;
@@ -178,86 +178,9 @@ public:
 			x = 0;
 			for (int j = p1.curChunk_x*chunksSize; j < p1.curChunk_x*chunksSize+camSize; j++) {
 				SDL_Rect tile = { (x * grid_cell_size), (y * grid_cell_size), grid_cell_size, grid_cell_size };
-				if (m[i][j] <= -41) {
-					SDL_SetRenderDrawColor(renderer, palette[0].r, palette[0].g, palette[0].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				} 
-				else if (m[i][j] <= -36 && m[i][j] >= -40) {
-					SDL_SetRenderDrawColor(renderer, palette[1].r, palette[1].g, palette[1].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				} 
-				else if (m[i][j] <= -31 && m[i][j] >= -35) {
-					SDL_SetRenderDrawColor(renderer, palette[2].r, palette[2].g, palette[2].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				} 
-				else if (m[i][j] <= -26 && m[i][j] >= -30) {
-					SDL_SetRenderDrawColor(renderer, palette[3].r, palette[3].g, palette[3].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				} 
-				else if (m[i][j] <= -21 && m[i][j] >= -25) {
-					SDL_SetRenderDrawColor(renderer, palette[4].r, palette[4].g, palette[4].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				} 
-				else if (m[i][j] <= -16 && m[i][j] >= -20) {
-					SDL_SetRenderDrawColor(renderer, palette[5].r, palette[5].g, palette[5].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else if (m[i][j] <= -11 && m[i][j] >= -15) {
-					SDL_SetRenderDrawColor(renderer, palette[6].r, palette[6].g, palette[6].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else if (m[i][j] <= -6 && m[i][j] >= -10) {
-					SDL_SetRenderDrawColor(renderer, palette[7].r, palette[7].g, palette[7].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else if (m[i][j] <= -3 && m[i][j] >= -5) {
-					SDL_SetRenderDrawColor(renderer, palette[8].r, palette[8].g, palette[8].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else if (m[i][j] <= -1 && m[i][j] >= -2) {
-					SDL_SetRenderDrawColor(renderer, palette[9].r, palette[9].g, palette[9].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else if (m[i][j] == 0) {
-					SDL_SetRenderDrawColor(renderer, palette[10].r, palette[10].g, palette[10].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else if (m[i][j] >= 1 && m[i][j] <= 2) {
-					SDL_SetRenderDrawColor(renderer, palette[11].r, palette[11].g, palette[11].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else if (m[i][j] >= 2 && m[i][j] <= 5) {
-					SDL_SetRenderDrawColor(renderer, palette[12].r, palette[12].g, palette[12].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else if (m[i][j] >= 6 && m[i][j] <= 10) {
-					SDL_SetRenderDrawColor(renderer, palette[13].r, palette[13].g, palette[13].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else if (m[i][j] >= 11 && m[i][j] <= 15) {
-					SDL_SetRenderDrawColor(renderer, palette[14].r, palette[14].g, palette[14].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else if (m[i][j] >= 16 && m[i][j] <= 20) {
-					SDL_SetRenderDrawColor(renderer, palette[15].r, palette[15].g, palette[15].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else if (m[i][j] >= 21 && m[i][j] <= 25) {
-					SDL_SetRenderDrawColor(renderer, palette[16].r, palette[16].g, palette[16].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else if (m[i][j] >= 26 && m[i][j] <= 32) {
-					SDL_SetRenderDrawColor(renderer, palette[17].r, palette[17].g, palette[17].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else if (m[i][j] >= 33 && m[i][j] <= 40) {
-					SDL_SetRenderDrawColor(renderer, palette[18].r, palette[18].g, palette[18].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
-				else {
-					SDL_SetRenderDrawColor(renderer, palette[19].r, palette[19].g, palette[19].b, 0);
-					SDL_RenderFillRect(renderer, &tile);
-				}
+				int colorPos = tileColor(m[i][j]);
+				SDL_SetRenderDrawColor(renderer, palette[colorPos].r, palette[colorPos].g, palette[colorPos].b, 0);
+				SDL_RenderFillRect(renderer, &tile);
 				x++;
 			}
 			y++;
@@ -283,7 +206,71 @@ public:
 		SDL_RenderPresent(renderer); //Render backbuffer
 	}
 
-	//Renders player
+	//returns position of correct palette color for a given tile 
+	int tileColor(int x) {
+		if (x <= -41) {
+			return 0;
+		}
+		else if (x <= -36 && x >= -40) {
+			return 1;
+		}
+		else if (x <= -31 && x >= -35) {
+			return 2;
+		}
+		else if (x <= -26 && x >= -30) {
+			return 3;
+		}
+		else if (x <= -21 && x >= -25) {
+			return 4;
+		}
+		else if (x <= -16 && x >= -20) {
+			return 5;
+		}
+		else if (x <= -11 && x >= -15) {
+			return 6;
+		}
+		else if (x <= -6 && x >= -10) {
+			return 7;
+		}
+		else if (x <= -3 && x >= -5) {
+			return 8;
+		}
+		else if (x <= -1 && x >= -2) {
+			return 9;
+		}
+		else if (x == 0) {
+			return 10;
+		}
+		else if (x >= 1 && x <= 2) {
+			return 11;
+		}
+		else if (x >= 2 && x <= 5) {
+			return 12;
+		}
+		else if (x >= 6 && x <= 10) {
+			return 13;
+		}
+		else if (x >= 11 && x <= 15) {
+			return 14;
+		}
+		else if (x >= 16 && x <= 20) {
+			return 15;
+		}
+		else if (x >= 21 && x <= 25) {
+			return 16;
+		}
+		else if (x >= 26 && x <= 32) {
+			return 17;
+		}
+		else if (x >= 33 && x <= 40) {
+			return 18;
+		}
+		else {
+			return 19;
+		}
+	}
+
+	//Renders player camera perspective
 	void renderPlayer() {
 		SDL_Rect playerRender = { ((this->p1.col-this->p1.curChunk_x*chunksSize)*grid_cell_size), 
 			((this->p1.row-this->p1.curChunk_y*chunksSize)*grid_cell_size), 
@@ -294,7 +281,6 @@ public:
 
 	//Process player input and schedules world updates
 	void simLoop(int a) {
-		char input;
 		while (!quit) {
 			SDL_Event event;
 			while (SDL_PollEvent(&event)) {
@@ -304,29 +290,31 @@ public:
 				else if (event.type == SDL_KEYDOWN) {
 					switch (event.key.keysym.sym) {
 						case SDLK_UP:
-							this->p1.walk(0);
-							this->updateCamera();
-							this->displayWorld();
+							p1.walk(0);
+							updateCamera();
+							renderCameraPerspective();
 							a--;
 							break;
 						case SDLK_RIGHT:
-							this->p1.walk(1);
-							this->updateCamera();
-							this->displayWorld();
+							p1.walk(1);
+							updateCamera();
+							renderCameraPerspective();
 							a--;
 							break;
 						case SDLK_DOWN:
-							this->p1.walk(2);
-							this->updateCamera();
-							this->displayWorld();
+							p1.walk(2);
+							updateCamera();
+							renderCameraPerspective();
 							a--;
 							break;
 						case SDLK_LEFT:
-							this->p1.walk(3);
-							this->updateCamera();
-							this->displayWorld();
+							p1.walk(3);
+							updateCamera();
+							renderCameraPerspective();
 							a--;
 							break;
+						case SDLK_m:
+							displayWorldMap();
 						}
 				}
 				else continue;
@@ -361,11 +349,50 @@ public:
 			p1.curChunk_y+=2;
 		}
 	}
+
+	//Display world map when pressing m, toggle off by pressing m again. Movement disabled.
+	void displayWorldMap() {
+		SDL_RenderClear; //clear screen
+		
+		int grid_cell_size2 = 4, mapSize = 100;
+		
+		for (int i = 0; i < mapSize; i++) {
+			for (int j = 0; j < mapSize; j++) {
+				SDL_Rect tile = { j*grid_cell_size2, i*grid_cell_size2, grid_cell_size2, grid_cell_size2 };
+				if (i == p1.row && j == p1.col) {
+					SDL_SetRenderDrawColor(renderer, 228, 0, 224, 0);
+				}
+				else {
+					int colorPos = tileColor(m[i][j]);
+					SDL_SetRenderDrawColor(renderer, palette[colorPos].r, palette[colorPos].g, palette[colorPos].b, 0);
+				}
+				SDL_RenderFillRect(renderer, &tile);
+			}
+		}
+		SDL_RenderPresent(renderer); //Render backbuffer
+		//handle input to go back to camera view
+		while (!quit) {
+			SDL_Event event;
+			while (SDL_PollEvent(&event)) {
+				if (event.type == SDL_QUIT) {
+					quit = SDL_TRUE;
+				}
+				else if (event.type == SDL_KEYDOWN) {
+					switch (event.key.keysym.sym) {
+					case SDLK_m:
+						renderCameraPerspective();
+						quit = SDL_TRUE;
+						break;
+					}
+				}
+			}
+		}
+		quit = SDL_FALSE;
+	}
 };
 
 int main() {
-	int n = 5000;
-	char input;
+	int n = 5000;	//turns 
 	world2D test;
 	test.run(n);
 	return 0;
