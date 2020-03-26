@@ -3,6 +3,7 @@
 #include <SDL.h>
 #include <vector>
 #include <algorithm>
+#include "human.h"
 
 #undef main
 
@@ -17,7 +18,7 @@ public:
 	enum direction { up = 0, right = 1, down = 2, left = 3 };		//orientation
 	int inventory[5] , inventorySize = size(inventory), inventoryLoad = 0;
 	vector<int> selectedItems;
-	int hearts = 3, hunger = 3;
+	int hearts = 3, hunger = 3, hungerCountdown = 14;
 	bool spear = false;
 	
 	player() {}
@@ -45,6 +46,7 @@ public:
 	int camSize = size(chunks)*2;		//Camera view size
 	int turnsElapsed = 0;
 	player p1;
+	vector<human> humanList;
 	
 	SDL_Color palette[20] = { {25, 25, 112, 0}, {0, 0, 128, 0}, {0, 0, 205, 0}, {0, 0, 225, 0}, {0, 0, 255, 0}, {45, 100, 245, 0},
 								{51, 171, 240, 0}, {82, 219, 255, 0}, {110, 255, 255, 0}, {168, 255, 255}, {227, 220, 192, 0},
@@ -183,9 +185,176 @@ public:
 				"Create window and renderer: %s", SDL_GetError());
 			return EXIT_FAILURE;
 		}
-		//Initialize PNG loading
+		
+		loadHumans();
 
 		return 0;
+	}
+
+	//loads human NPCs
+	void loadHumans() {
+		random_device rd;           //Will be used to obtain a seed for the random number engine
+		mt19937 gen(rd());          //Standard mersenne_twister_engine seeded with rd()
+		uniform_real_distribution<> numOfNPC(8, 17);
+		double numberOfNPCs = (int)(numOfNPC(gen));
+		cout << numberOfNPCs << endl;
+		for (int i = 0; i < numberOfNPCs; i++) {
+			humanList.push_back(*(new human));
+		}
+		for (int i = 0; i < humanList.size(); i++) {
+			setSpawn(&humanList[i], i);
+		}
+	}
+
+	//set spawn coordinates
+	int setSpawn(human *npc, int mult) {
+		random_device rd;           //Will be used to obtain a seed for the random number engine
+		mt19937 gen(rd());          //Standard mersenne_twister_engine seeded with rd()
+		uniform_real_distribution<> disSpawn(0, 1);  
+		
+		
+		for (int i = 0+3*mult; i < mSize; i++) {
+			for (int j = 0*mult+mult; j < mSize; j++) {
+
+				if (m[i][j][0] >= -5 && m[i][j][0] <= 25) {
+					double NPCspawn = (disSpawn(gen));
+					if (NPCspawn <= 0.00075) {
+						m[i][j][2] = 1;
+						npc->setY(i);
+						npc->setX(j);
+						return 1;
+					}
+				}
+			}
+		}
+	}
+
+	//control center for NPCs
+	void controlNPCs() {
+		for (int i = 0; i < humanList.size(); i++) {
+			human *npc = &humanList[i];
+			if (npc->isDead == false) {
+				escapeDanger(npc);
+				if (npc->hunger < 3.0) {
+					npc->eat();
+				}
+				if (npc->dangerDeltaX != NULL || npc->dangerDeltaY != NULL) {
+					moveNPCs(npc, npc->col - npc->dangerDeltaX, npc->row - npc->dangerDeltaY);
+				}
+				else if (npc->decisionCoef <= 0.7) {
+					findFood(npc);
+					moveNPCs(npc, npc->foodTargetX, npc->foodTargetY);
+				}
+				else {
+					findMat(npc);
+					moveNPCs(npc, npc->matTargetX, npc->matTargetY);
+				}
+				updateStatsNPC(npc);
+				npc->print();
+			}
+		}
+		cout << "=========================" << endl;
+	}
+
+	//move each NPC
+	void moveNPCs(human *npc, int targetX, int targetY) {
+		random_device rd;           
+		mt19937 gen(rd());          
+		uniform_real_distribution<> disDir(0, 4);
+		findFood(npc);
+		m[npc->row][npc->col][2] = 0;
+		if (targetX == -1 || targetY == -1) {
+			int dir = (disDir(gen));
+			npc->move(dir);
+		}
+		else {
+			if (npc->row < targetY) {
+				npc->move(2);
+			}
+			else if (npc->row > targetY) {
+				npc->move(0);
+			}
+			else if (npc->col < targetX) {
+				npc->move(1);
+			}
+			else if (npc->col > targetX) {
+				npc->move(3);
+			}
+		}
+		if ((npc->row == targetY) && (npc->col == targetX)) {
+			if (npc->inventoryLoad == npc->inventorySize) {
+				npc->dropItem();
+			}
+			npc->foodTargetX = -1;
+			npc->foodTargetY = -1;
+			npc->matTargetX = -1;
+			npc->matTargetY = -1;
+			objectPickupNPC(npc);
+		}
+		m[npc->row][npc->col][2] = 1;
+		npc->setView();
+	}
+
+	//find food sets target
+	void findFood(human *npc) {
+		for (int i = npc->viewY; i < npc->viewY + npc->viewRange*2; i++) {
+			for (int j = npc->viewX; j < npc->viewX + npc->viewRange * 2; j++) {
+				if ((i >= 0 || i <= 99) && (j >= 0 || j <= 99)) {
+					if (m[i][j][1] == 1 || m[i][j][1] == 2) {
+						npc->foodTargetY = i;
+						npc->foodTargetX = j;
+					}
+				}
+			}
+		}
+	}
+
+	//find material
+	void findMat(human *npc) {
+		for (int i = npc->viewY; i < npc->viewY + npc->viewRange * 2; i++) {
+			for (int j = npc->viewX; j < npc->viewX + npc->viewRange * 2; j++) {
+				if ((i >= 0 || i <= 99) && (j >= 0 || j <= 99)) {
+					if ((m[i][j][1] == 3 ) || (m[i][j][1] == 4)) {
+						npc->matTargetY = i;
+						npc->matTargetX = j;
+					} 
+				}
+			}
+		}
+	}
+
+	//escape danger
+	void escapeDanger(human *npc) {
+		for (int i = npc->viewY; i < npc->viewY + npc->viewRange * 2; i++) {
+			for (int j = npc->viewX; j < npc->viewX + npc->viewRange * 2; j++) {
+				if ((i >= 0 || i <= 99) && (j >= 0 || j <= 99)) {
+					if (m[i][j][2] == 2) {	//jaguar
+						npc->dangerDeltaY = npc->row - i;
+						npc->dangerDeltaX = npc->col - j;
+					}
+				}
+			}
+		}
+	}
+
+	//update stats of npc
+	void updateStatsNPC(human *npc) {
+		if (npc->hearts == 0.0 && npc->isDead == false) {
+			//cout << "npc died" << endl;
+			m[npc->row][npc->col][2] = 0;
+			npc->isDead = true;
+		}
+		if (npc->isDead == false) {
+			if (npc->hunger == 0.0) {
+				npc->hearts -= 1.0;
+			}
+			if (npc->hungerCountdown == 0) {
+				npc->hunger -= 1.0;
+				npc->decisionCoef -= 0.3;
+				npc->hungerCountdown = 14;
+			}
+			else npc->hungerCountdown--;
+		}
 	}
 
 	//Print world to console. For debug purposes.
@@ -220,6 +389,12 @@ public:
 					SDL_Rect rock = { (x * grid_cell_size) + 5, (y * grid_cell_size) + 5, 5, 5 };
 					SDL_SetRenderDrawColor(renderer, 128, 128, 128, 0);
 					SDL_RenderFillRect(renderer, &rock);
+				}
+				if (m[i][j][2] == 1) {
+					SDL_Rect npc = { (x * grid_cell_size) + 5, (y * grid_cell_size) + 5,
+						grid_cell_size/2, grid_cell_size/2 };
+					SDL_SetRenderDrawColor(renderer, 255, 127, 80, 0);
+					SDL_RenderFillRect(renderer, &npc);
 				}
 				x++;
 			}
@@ -425,6 +600,20 @@ public:
 		}
 	}
 
+	//object pickup NPC version
+	void objectPickupNPC(human *npc) {
+		if (npc->inventoryLoad < npc->inventorySize && m[npc->row][npc->col][1] != 0) {
+			for (int i = 0; i < npc->inventorySize; i++) {
+				if (npc->inventory[i] == 0) {
+					npc->inventory[i] = m[npc->row][npc->col][1];
+					m[npc->row][npc->col][1] = 0;
+					npc->inventoryLoad++;
+					break;
+				}
+			}
+		}
+	}
+
 	//main input handler
 	void inputReader(int a){
 		SDL_Event event;
@@ -476,8 +665,9 @@ public:
 			updateCamera();
 			a--;
 			turnsElapsed++;
-			if (turnsElapsed == 9) {
+			if (turnsElapsed == 19) {
 				spawnControl();
+				turnsElapsed = 0;
 			}
 			clearScreen();
 			renderCameraPerspective();
@@ -486,9 +676,14 @@ public:
 			clearScreen();
 			renderCameraPerspective();
 		}
+		if (turnsElapsed == 19) {
+			spawnControl();
+			turnsElapsed = 0;
+		}
 		if (p1.spear == true) {
 			renderImage();
 		}
+		controlNPCs();
 		trackStats();
 		renderUI();
 	}
@@ -569,22 +764,23 @@ public:
 
 	//track status numbers
 	void trackStats() {
+		statDelta(p1.hungerCountdown, -1);
 		if (p1.hearts < 3 && p1.hunger == 3) {
 			statDelta(p1.hearts, 1);
 		}
-		if (turnsElapsed == 9) {
+		if (p1.hungerCountdown == 0) {
 			statDelta(p1.hunger, -1);
-			turnsElapsed = 0;
+			p1.hungerCountdown = 14;
 		}
 		if (p1.hunger == 0) {
 			if (p1.hearts == 1) {
-				quit = SDL_TRUE;
+				//quit = SDL_TRUE;
 				cout << "you died" << endl;
 			} else statDelta(p1.hearts, -1);
 		}
 	}
 
-	//eat a fish or apple is possible
+	//eat a fish or apple is possible - should be a player method
 	void eat() {
 		if (p1.hunger < 3) {
 			for (int i = 0; i < p1.inventorySize; i++) {
@@ -592,6 +788,7 @@ public:
 					p1.inventory[i] = 0;
 					p1.inventoryLoad--;
 					p1.hunger++;
+					p1.hungerCountdown = 15;
 					break;
 				}
 			}
