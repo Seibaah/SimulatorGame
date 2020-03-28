@@ -1,0 +1,23 @@
+﻿  human.cpp
+c:\git\simulators\simulator\human.cpp(81): warning C4305: '+=': truncation from 'double' to 'float'
+c:\git\simulators\simulator\human.cpp(133): warning C4305: '-=': truncation from 'double' to 'float'
+c:\git\simulators\simulator\human.cpp(187): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  main.cpp
+  player.cpp
+c:\git\simulators\simulator\player.cpp(160): warning C4474: 'printf' : too many arguments passed for format string
+  c:\git\simulators\simulator\player.cpp(160): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\git\simulators\simulator\player.cpp(168): warning C4474: 'printf' : too many arguments passed for format string
+  c:\git\simulators\simulator\player.cpp(168): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+  world.cpp
+c:\git\simulators\simulator\world.cpp(169): warning C4018: '<': signed/unsigned mismatch
+c:\git\simulators\simulator\world.cpp(223): warning C4018: '<': signed/unsigned mismatch
+c:\git\simulators\simulator\world.cpp(585): warning C4474: 'printf' : too many arguments passed for format string
+  c:\git\simulators\simulator\world.cpp(585): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\git\simulators\simulator\world.cpp(593): warning C4474: 'printf' : too many arguments passed for format string
+  c:\git\simulators\simulator\world.cpp(593): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+  Generating code
+c:\git\simulators\simulator\world.cpp(219): warning C4715: 'world::setPlayerSpawn': not all control paths return a value
+c:\git\simulators\simulator\world.cpp(196): warning C4715: 'world::setNPCSpawn': not all control paths return a value
+  All 236 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Simulator.vcxproj -> C:\git\Simulators\Simulator\Release\Simulator.exe

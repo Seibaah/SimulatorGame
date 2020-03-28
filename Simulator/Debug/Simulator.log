@@ -1,12 +1,6 @@
-﻿  main.cpp
-c:\git\simulators\simulator\main.cpp(204): warning C4018: '<': signed/unsigned mismatch
-c:\git\simulators\simulator\main.cpp(234): warning C4018: '<': signed/unsigned mismatch
-c:\git\simulators\simulator\main.cpp(267): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-c:\git\simulators\simulator\main.cpp(353): warning C4305: '-=': truncation from 'double' to 'float'
-c:\git\simulators\simulator\main.cpp(533): warning C4551: function call missing argument list
-c:\git\simulators\simulator\main.cpp(947): warning C4474: 'printf' : too many arguments passed for format string
-  c:\git\simulators\simulator\main.cpp(947): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
-c:\git\simulators\simulator\main.cpp(953): warning C4474: 'printf' : too many arguments passed for format string
-  c:\git\simulators\simulator\main.cpp(953): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
-c:\git\simulators\simulator\main.cpp(230): warning C4715: 'world2D::setSpawn': not all control paths return a value
+﻿  player.cpp
+c:\git\simulators\simulator\player.cpp(160): warning C4474: 'printf' : too many arguments passed for format string
+  c:\git\simulators\simulator\player.cpp(160): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\git\simulators\simulator\player.cpp(168): warning C4474: 'printf' : too many arguments passed for format string
+  c:\git\simulators\simulator\player.cpp(168): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
   Simulator.vcxproj -> C:\git\Simulators\Simulator\Debug\Simulator.exe
