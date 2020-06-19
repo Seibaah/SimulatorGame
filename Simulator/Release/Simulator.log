@@ -1,23 +1,24 @@
 ﻿  human.cpp
-c:\git\simulators\simulator\human.cpp(81): warning C4305: '+=': truncation from 'double' to 'float'
-c:\git\simulators\simulator\human.cpp(133): warning C4305: '-=': truncation from 'double' to 'float'
-c:\git\simulators\simulator\human.cpp(187): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\Denis\git\SimulatorGame\Simulator\human.cpp(81,29): warning C4305:  '+=': truncation from 'double' to 'float'
+C:\Users\Denis\git\SimulatorGame\Simulator\human.cpp(133,29): warning C4305:  '-=': truncation from 'double' to 'float'
   main.cpp
   player.cpp
-c:\git\simulators\simulator\player.cpp(160): warning C4474: 'printf' : too many arguments passed for format string
-  c:\git\simulators\simulator\player.cpp(160): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
-c:\git\simulators\simulator\player.cpp(168): warning C4474: 'printf' : too many arguments passed for format string
-  c:\git\simulators\simulator\player.cpp(168): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+C:\Users\Denis\git\SimulatorGame\Simulator\human.cpp(187,11): warning C4244:  'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\Denis\git\SimulatorGame\Simulator\player.cpp(160,47): warning C4474:  'printf' : too many arguments passed for format string
+C:\Users\Denis\git\SimulatorGame\Simulator\player.cpp(160,47): message :  placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+C:\Users\Denis\git\SimulatorGame\Simulator\player.cpp(168,64): warning C4474:  'printf' : too many arguments passed for format string
   world.cpp
-c:\git\simulators\simulator\world.cpp(169): warning C4018: '<': signed/unsigned mismatch
-c:\git\simulators\simulator\world.cpp(223): warning C4018: '<': signed/unsigned mismatch
-c:\git\simulators\simulator\world.cpp(585): warning C4474: 'printf' : too many arguments passed for format string
-  c:\git\simulators\simulator\world.cpp(585): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
-c:\git\simulators\simulator\world.cpp(593): warning C4474: 'printf' : too many arguments passed for format string
-  c:\git\simulators\simulator\world.cpp(593): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+C:\Users\Denis\git\SimulatorGame\Simulator\player.cpp(168,64): message :  placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+C:\Users\Denis\git\SimulatorGame\Simulator\world.cpp(169,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Denis\git\SimulatorGame\Simulator\world.cpp(223,20): warning C4018:  '<': signed/unsigned mismatch
+C:\Users\Denis\git\SimulatorGame\Simulator\world.cpp(585,47): warning C4474:  'printf' : too many arguments passed for format string
+C:\Users\Denis\git\SimulatorGame\Simulator\world.cpp(585,47): message :  placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+C:\Users\Denis\git\SimulatorGame\Simulator\world.cpp(593,64): warning C4474:  'printf' : too many arguments passed for format string
+C:\Users\Denis\git\SimulatorGame\Simulator\world.cpp(593,64): message :  placeholders and their parameters expect 0 variadic arguments, but 1 were provided
   Generating code
-c:\git\simulators\simulator\world.cpp(219): warning C4715: 'world::setPlayerSpawn': not all control paths return a value
-c:\git\simulators\simulator\world.cpp(196): warning C4715: 'world::setNPCSpawn': not all control paths return a value
-  All 236 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Previous IPDB was built with incompatible compiler, fall back to full compilation.
+C:\Users\Denis\git\SimulatorGame\Simulator\world.cpp(219): warning C4715: 'world::setPlayerSpawn': not all control paths return a value
+C:\Users\Denis\git\SimulatorGame\Simulator\world.cpp(196): warning C4715: 'world::setNPCSpawn': not all control paths return a value
+  All 200 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Finished generating code
-  Simulator.vcxproj -> C:\git\Simulators\Simulator\Release\Simulator.exe
+  Simulator.vcxproj -> C:\Users\Denis\git\SimulatorGame\Simulator\Release\Simulator.exe
