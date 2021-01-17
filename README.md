@@ -1,9 +1,12 @@
 # Paleolithic
 
-•	2D pixel art, turn based survival game. Coded in C++ and SDL.
-•	Implemented procedural terrain generation.
-•	Simple inventory and crafting system with UI.
-•	NPCs follow a decision tree to gather food and avoid starving.
+•	2D pixel art, turn based survival game. Coded in C++ and SDL
+
+•	Implemented procedural terrain generation
+
+•	Simple inventory and crafting system with UI
+
+•	NPCs follow a decision tree to gather food and avoid starving
 
 The final project serves to demo some elements present in simulations, mainly procedural terrain generation, NPCs behavior and simulation loop. 
 
