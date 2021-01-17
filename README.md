@@ -1,4 +1,4 @@
-# Paleolithic
+# Paleolithic (2-D Turn-based Survival-PC)
 
 •	2D pixel art, turn based survival game. Coded in C++ and SDL
 
