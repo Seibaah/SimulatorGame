@@ -1,5 +1,7 @@
 # Paleolithic (2-D Turn-based Survival-PC)
 
+![](https://github.com/Seibaah/SimulatorGame/blob/master/paleo.gif)
+
 •	2D pixel art, turn based survival game. Coded in C++ and SDL
 
 •	Implemented procedural terrain generation
